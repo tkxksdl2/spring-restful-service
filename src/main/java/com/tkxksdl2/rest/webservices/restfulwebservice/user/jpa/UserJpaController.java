@@ -1,8 +1,7 @@
-package com.tkxksdl2.rest.webservices.restfulwebservice.user;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+package com.tkxksdl2.rest.webservices.restfulwebservice.user.jpa;
 
 import com.tkxksdl2.rest.webservices.restfulwebservice.exception.httpexception.UserNotFoundException;
+import com.tkxksdl2.rest.webservices.restfulwebservice.user.User;
 import jakarta.validation.Valid;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
@@ -14,22 +13,25 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
-public class UserController {
-    private final UserDaoService userService;
+public class UserJpaController {
+    private final UserRepository userRepository;
 
-    public UserController(UserDaoService userService) {
-        this.userService = userService;
+    public UserJpaController(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    @GetMapping("users")
+    @GetMapping("/jpa/users")
     public List<User> retrieveAllUsers(){
-        return userService.findAll();
+        return userRepository.findAll();
     }
 
-    @GetMapping("users/{id}")
+    @GetMapping("/jpa/users/{id}")
     public EntityModel<User> findOneById(@PathVariable int id) {
-        User user = userService.findOne(id);
+        User user = userRepository.findById(id).orElse(null);
         if (user == null) throw new UserNotFoundException("id: " + id, HttpStatus.NOT_FOUND);
 
         EntityModel<User> entityModel = EntityModel.of(user);
@@ -38,9 +40,9 @@ public class UserController {
         return entityModel;
     }
 
-    @PostMapping("users")
+    @PostMapping("/jpa/users")
     public ResponseEntity<User> createUser(@Valid @RequestBody User user){
-        User newUser =  userService.save(user);
+        User newUser =  userRepository.save(user);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest().path("/{id}").buildAndExpand(newUser.getId()).toUri();
 
@@ -48,9 +50,9 @@ public class UserController {
 //        return ResponseEntity.created(null).body(newUser);
     }
 
-    @DeleteMapping("users/{id}")
+    @DeleteMapping("/jpa/users/{id}")
     public void DeleteUser(@PathVariable int id) {
-        userService.deleteById(id);
+        userRepository.deleteById(id);
     }
 
 }
