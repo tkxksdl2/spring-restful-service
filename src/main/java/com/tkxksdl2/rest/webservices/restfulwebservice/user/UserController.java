@@ -1,8 +1,11 @@
 package com.tkxksdl2.rest.webservices.restfulwebservice.user;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import com.tkxksdl2.rest.webservices.restfulwebservice.exception.UserNotFoundException;
 import jakarta.validation.Valid;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -24,11 +27,14 @@ public class UserController {
     }
 
     @GetMapping("users/{id}")
-    public User findOneById(@PathVariable int id) {
+    public EntityModel<User> findOneById(@PathVariable int id) {
         User user = userService.findOne(id);
         if (user == null) throw new UserNotFoundException("id: " + id);
 
-        return user;
+        EntityModel<User> entityModel = EntityModel.of(user);
+        WebMvcLinkBuilder link = linkTo(methodOn(this.getClass()).retrieveAllUsers());
+        entityModel.add(link.withRel("all-users"));
+        return entityModel;
     }
 
     @PostMapping("users")
